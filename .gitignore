@@ -1,0 +1,5 @@
+tdlib/
+*.so
+*.a
+*.o
+*.cmake
