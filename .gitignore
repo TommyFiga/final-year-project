@@ -3,3 +3,7 @@ tdlib/
 *.a
 *.o
 *.cmake
+
+.tdlib/
+
+.env
