@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	ErrInvalidRequest = errors.New("INVALID_REQUEST")
-	ErrInvalidCommand = errors.New("INVALID_COMMAND")
+	ErrInvalidRequest = errors.New("invalid request")
+	ErrInvalidCommand = errors.New("invalid command")
 )
 
 // RequestArgs holds the parsed components of a client request.
