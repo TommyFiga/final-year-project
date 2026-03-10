@@ -8,6 +8,13 @@ import (
 var (
 	ErrInvalidRequest = errors.New("invalid request")
 	ErrInvalidCommand = errors.New("invalid command")
+
+	allowedCmds = map[string]string{
+		"/get":    "GET",
+		"/post":   "POST",
+		"/put":    "PUT",
+		"/delete": "DELETE",
+	}
 )
 
 // RequestArgs holds the parsed components of a client request.
@@ -41,17 +48,10 @@ func ParseRequest(input string) (*RequestArgs, error) {
 
 // checkReqCmd reports whether cmd is a valid request command.
 // Valid commands are: /get, /post, /put, /delete.
-// 
+//
 // It returns the normalized HTTP method (e.g., GET, POST) if valid
 // or ErrInvalidCommand if the command is not recognized.
 func checkReqCmd(cmd string) (string, error) {
-	allowedCmds := map[string]string{
-		"/get":    "GET",
-		"/post":   "POST",
-		"/put":    "PUT",
-		"/delete": "DELETE",
-	}
-
 	method, ok := allowedCmds[cmd]
 	if !ok {
 		return "", ErrInvalidCommand
