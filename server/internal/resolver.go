@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// ChunkSize defines the maaximum size in bytes of each content chunk.
-const ChunkSize int16 = 4096
+// ChunkSize defines the maximum size in bytes of each content chunk.
+const ChunkSize = 4096
 
 var (
 	ErrInvalidFilename = errors.New("invalid filename")
@@ -25,7 +25,7 @@ var storageDir = os.Getenv("STORAGE_DIR")
 // It returns ErrInvalidFilename if the filename is invalid or escapes the
 // storage directory, or ErrFileNotFound if the file does not exist or cannot
 // be accessed.
-func checkFile(filename string) (int64, error) {
+func CheckFile(filename string) (int64, error) {
 	if storageDir == "" {
 		return 0, ErrFileNotFound
 	}
@@ -52,6 +52,11 @@ func checkFile(filename string) (int64, error) {
 
 // calculateChunks returns the number of chunks required to send contentLen bytes,
 // based on ChunkSize.
-func calculateChunks(contentLen int64) int {
-	return int(math.Ceil(float64(contentLen) / float64(ChunkSize)))
+func CalculateChunks(contentLen int64) int16 {
+	return int16(math.Ceil(float64(contentLen) / ChunkSize))
+}
+
+// calculateEncodedSize returns the content size after appyling base64 encoding
+func CalculateEncodedSize(fileSize int64) int64 {
+	return int64(math.Ceil(float64(fileSize) / 3 * 4))
 }
