@@ -2,7 +2,9 @@ package internal
 
 import (
 	"errors"
+	"io"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,14 +14,51 @@ import (
 const ChunkSize = 4096
 
 var (
-	ErrInvalidFilename = errors.New("invalid filename")
-	ErrFileNotFound    = errors.New("file not found")
-	ErrStorageNotFound = errors.New("storage dir not found")
+	ErrInvalidFilename 		= errors.New("invalid filename")
+	ErrFileNotFound  		= errors.New("file not found")
+	ErrStorageNotFound		= errors.New("storage dir not found")
+	ErrRequestCreation		= errors.New("failed creating a request")
+	ErrResponseMaking  		= errors.New("failed making response")
+	ErrCreatingTempFile		= errors.New("failed creating a temporary file")
+	ErrWrtingToTempFile		= errors.New("failed writing to temp file")
+	ErrUnexpectedStatus		= errors.New("unexpected status code")
 )
 
 // storageDir is the root directory where server content is stored.
 var storageDir = os.Getenv("STORAGE_DIR")
 
+
+func resolveRemote(url string) (string, int64, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", 0, ErrRequestCreation
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", 0, ErrResponseMaking
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode !=http.StatusOK {
+		return "", 0, ErrUnexpectedStatus
+	}
+
+	tempfile, err := os.CreateTemp(storageDir + "/tmp", "remote-")
+	if err != nil {
+		return "", 0, ErrCreatingTempFile
+	}
+
+	filesize, err := io.Copy(tempfile, resp.Body)
+	if err != nil {
+		return "", 0, ErrWrtingToTempFile
+	}
+	tempfile.Close()
+
+	return tempfile.Name(), filesize, nil
+}
 
 // resolveLocal validates and resolves a local filename to its full path and size.
 // It ensures the file exists within the storage directory, preventing directory
