@@ -20,46 +20,40 @@ var (
 // storageDir is the root directory where server content is stored.
 var storageDir = os.Getenv("STORAGE_DIR")
 
-// Sanitize validates if the received filename is valid and exists within the
-// storage directory.
+
+// resolveLocal validates and resolves a local filename to its full path and size.
+// It ensures the file exists within the storage directory, preventing directory
+// traversal attacks.
 //
-// It retuns ErrStorageNotFound if the storage directory isn't found and ErrInvalidFilename
-// if the filename is out of the storage directory bounds or the file name is invalid
-func Sanitize(filename string) (string, error) {
+// It returns ErrStorageNotFound if STORAGE_DIR is not configured, ErrInvalidFilename
+// if the filename is invalid or escapes the storage directory, and ErrFileNotFound
+// if the file does not exist.
+func resolveLocal(filename string) (string, int64, error) {
 	if storageDir == "" {
-		return "", ErrStorageNotFound
+		return "", 0, ErrStorageNotFound
 	}
 
 	sanitizedFilename := filepath.Clean(filename)
 	if sanitizedFilename == "." {
-		return "", ErrInvalidFilename
+		return "", 0, ErrInvalidFilename
 	}
 
 	// Build the full path verify it remains within storageDir
 	// to prevent directory traversal attacks.
 	fullPath := filepath.Join(storageDir, sanitizedFilename)
-	if !strings.HasPrefix(fullPath, filepath.Clean(storageDir)+string(filepath.Separator)) {
-		return "", ErrInvalidFilename
+	if !strings.HasPrefix(fullPath, filepath.Clean(storageDir) + string(filepath.Separator)) {
+		return "", 0, ErrInvalidFilename
 	}
 
-	return fullPath, nil
-}
-
-// CheckFile returns the size of a file based on the filename provided.
-//
-// It returns ErrFileNotFound if the filename passed doesn't correspond to a
-// valid file.
-func FileSize(filename string) (int64, error) {
-	fileinfo, err := os.Stat(filename)
+	fileinfo, err := os.Stat(fullPath)
 	if err != nil {
-		return 0, ErrFileNotFound
+		return "", 0, ErrFileNotFound
 	}
 
-	return fileinfo.Size(), nil
+	return  fullPath, fileinfo.Size(), nil
 }
 
-// calculateChunks returns the number of chunks required to send contentLen bytes,
-// based on ChunkSize.
+// calculateChunks returns the number of chunks required to send contentLen bytes, based on ChunkSize.
 func CalculateChunks(contentLen int) int {
 	return int(math.Ceil(float64(contentLen) / ChunkSize))
 }
