@@ -26,6 +26,21 @@ var (
 // storageDir is the root directory where server content is stored.
 var storageDir = os.Getenv("STORAGE_DIR")
 
+// Resolve determines whether the requested content is a local or remote resource
+// and delegates accordingly, returning the path to the file hosting the content
+// and its size in bytes.
+//
+// It returns ErrStorageNotFound, ErrInvalidFilename, or ErrFileNotFound for local
+// resources, and ErrRequestCreation, ErrResponseMaking, ErrCreatingTempFile, or
+// ErrWritingToTempFile for remote resources.
+func Resolve(reqArgs RequestArgs) (string, int64, error) {
+	if strings.HasPrefix(reqArgs.Content, "http://") || strings.HasPrefix(reqArgs.Content, "https://") {
+		return resolveRemote(reqArgs.Content)
+	}
+
+	return resolveLocal(reqArgs.Content)
+}
+
 // resolveRemote fetches an internet resource and stores it in a temporary file.
 // It replicates the HTTP response, meaning that even if the status is 4xx or
 // 5xx the response is still propagated.
