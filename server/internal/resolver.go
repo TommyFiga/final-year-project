@@ -3,15 +3,11 @@ package internal
 import (
 	"errors"
 	"io"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-// ChunkSize defines the maximum size in bytes of each content chunk.
-const ChunkSize = 4096
 
 var (
 	ErrInvalidFilename   = errors.New("invalid filename")
@@ -106,14 +102,4 @@ func resolveLocal(filename string) (string, int64, error) {
 	}
 
 	return fullPath, fileinfo.Size(), nil
-}
-
-// calculateChunks returns the number of chunks required to send contentLen bytes, based on ChunkSize.
-func CalculateChunks(contentLen int) int {
-	return int(math.Ceil(float64(contentLen) / ChunkSize))
-}
-
-// calculateEncodedSize returns the content size after applying base64 encoding.
-func CalculateEncodedSize(fileSize int64) int {
-	return int(math.Ceil(float64(fileSize) / 3 * 4))
 }
