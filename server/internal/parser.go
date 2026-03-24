@@ -35,7 +35,7 @@ func ParseRequest(input string) (*RequestArgs, error) {
 		return nil, ErrInvalidRequest
 	}
 
-	method, err := checkReqCmd(parts[0])
+	method, err := checkReqCmd(strings.ToLower(parts[0]))
 	if err != nil {
 		return nil, err
 	}
