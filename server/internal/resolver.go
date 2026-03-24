@@ -26,7 +26,13 @@ var (
 // storageDir is the root directory where server content is stored.
 var storageDir = os.Getenv("STORAGE_DIR")
 
-
+// resolveRemote fetches an internet resource and stores it in a temporary file.
+// It replicates the HTTP response, meaning that even if the status is 4xx or
+// 5xx the response is still propagated.
+//
+// It returns ErrRequestCreation if creating the request fails, ErrResponseMaking
+// if executing the request fails, ErrCreatingTempFile if the temporary file
+// cannot be created, or ErrWritingToTempFile if writing the response body fails.
 func resolveRemote(url string) (string, int64, error) {
 	client := &http.Client{}
 
