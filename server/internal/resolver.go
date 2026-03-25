@@ -3,6 +3,7 @@ package internal
 import (
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,14 +23,30 @@ var (
 // storageDir is the root directory where server content is stored.
 var storageDir = os.Getenv("STORAGE_DIR")
 
+// ResolvedResource holds the metadata of a resolved resource, whether local or
+// remote, required to stream its content back to the client.
+type ResolvedResource struct {
+	Status      int
+	FilePath    string
+	RawSize     int64
+	ContentType string
+	IsRemote    bool
+}
+
+func (r ResolvedResource) Cleanup() {
+	if r.IsRemote {
+		os.Remove(r.FilePath)
+  	}
+}
+
 // Resolve determines whether the requested content is a local or remote resource
-// and delegates accordingly, returning the path to the file hosting the content
-// and its size in bytes.
+// and delegates accordingly, returning a ResponseArgs containing the resolved
+// file path, raw size, status and content type.
 //
 // It returns ErrStorageNotFound, ErrInvalidFilename, or ErrFileNotFound for local
 // resources, and ErrRequestCreation, ErrResponseMaking, ErrCreatingTempFile, or
 // ErrWritingToTempFile for remote resources.
-func Resolve(reqArgs RequestArgs) (string, int64, error) {
+func Resolve(reqArgs RequestArgs) (*ResolvedResource, error) {
 	if strings.HasPrefix(reqArgs.Content, "http://") || strings.HasPrefix(reqArgs.Content, "https://") {
 		return resolveRemote(reqArgs.Content)
 	}
@@ -37,69 +54,100 @@ func Resolve(reqArgs RequestArgs) (string, int64, error) {
 	return resolveLocal(reqArgs.Content)
 }
 
-// resolveRemote fetches an internet resource and stores it in a temporary file.
-// It replicates the HTTP response, meaning that even if the status is 4xx or
-// 5xx the response is still propagated.
+// resolveRemote fetches an internet resource and stores it in a temporary file,
+// replicating the HTTP response regardless of status code.
+// It returns a ResponseArgs containing the temp file path, size in bytes,
+// HTTP status code, and inferred content type.
 //
 // It returns ErrRequestCreation if creating the request fails, ErrResponseMaking
 // if executing the request fails, ErrCreatingTempFile if the temporary file
-// cannot be created, or ErrWritingToTempFile if writing the response body fails.
-func resolveRemote(url string) (string, int64, error) {
+// cannot be created, or ErrWritingToTempFile if writing the response body fails
+func resolveRemote(url string) (*ResolvedResource, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", 0, ErrRequestCreation
+		return nil, ErrRequestCreation
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", 0, ErrResponseMaking
+		return nil, ErrResponseMaking
 	}
 	defer resp.Body.Close()
 
 	tempfile, err := os.CreateTemp(storageDir, "remote-")
 	if err != nil {
-		return "", 0, ErrCreatingTempFile
+		return nil, ErrCreatingTempFile
 	}
 
 	filesize, err := io.Copy(tempfile, resp.Body)
 	if err != nil {
-		return "", 0, ErrWritingToTempFile
+		tempfile.Close()
+		os.Remove(tempfile.Name())
+		return nil, ErrWritingToTempFile
 	}
 	tempfile.Close()
 
-	return tempfile.Name(), filesize, nil
+	contentType := "unknown"
+	if ct := resp.Header.Get("Content-Type"); ct != "" {
+		mediaType, _, err := mime.ParseMediaType(ct)
+		if err == nil {
+			parts := strings.SplitN(mediaType, "/", 2)
+			if len(parts) == 2 {
+				contentType = parts[1]
+			}
+		}
+	}
+
+	return &ResolvedResource{
+		Status:      resp.StatusCode,
+		FilePath:    tempfile.Name(),
+		RawSize:     filesize,
+		ContentType: contentType,
+		IsRemote:    true,
+	}, nil
 }
 
-// resolveLocal validates and resolves a local filename to its full path and size.
-// It ensures the file exists within the storage directory, preventing directory
-// traversal attacks.
+// resolveLocal validates and resolves a local filename to its full path, size,
+// and inferred content type. It ensures the file exists within the storage
+// directory, preventing directory traversal attacks.
 //
 // It returns ErrStorageNotFound if STORAGE_DIR is not configured, ErrInvalidFilename
 // if the filename is invalid or escapes the storage directory, and ErrFileNotFound
 // if the file does not exist.
-func resolveLocal(filename string) (string, int64, error) {
+func resolveLocal(filename string) (*ResolvedResource, error) {
 	if storageDir == "" {
-		return "", 0, ErrStorageNotFound
+		return nil, ErrStorageNotFound
 	}
 
 	sanitizedFilename := filepath.Clean(filename)
 	if sanitizedFilename == "." {
-		return "", 0, ErrInvalidFilename
+		return nil, ErrInvalidFilename
 	}
 
 	// Build the full path verify it remains within storageDir
 	// to prevent directory traversal attacks.
 	fullPath := filepath.Join(storageDir, sanitizedFilename)
 	if !strings.HasPrefix(fullPath, filepath.Clean(storageDir)+string(filepath.Separator)) {
-		return "", 0, ErrInvalidFilename
+		return nil, ErrInvalidFilename
 	}
 
 	fileinfo, err := os.Stat(fullPath)
 	if err != nil {
-		return "", 0, ErrFileNotFound
+		return nil, ErrFileNotFound
 	}
 
-	return fullPath, fileinfo.Size(), nil
+	contentType := strings.TrimPrefix(filepath.Ext(fullPath), ".")
+	if contentType == "" {
+		contentType = "unknown"
+	}
+
+	return &ResolvedResource{
+		Status:      StatusOk,
+		FilePath:    fullPath,
+		RawSize:     fileinfo.Size(),
+		ContentType: contentType,
+		IsRemote:    false,
+	}, nil
 }
