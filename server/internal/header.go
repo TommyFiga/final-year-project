@@ -15,17 +15,12 @@ const (
 	StatusServerError    = 500
 )
 
-// BuildHeader builds a header message from the given status, contentLen and chunks.
-func BuildHeader(status int, contentLen int, chunks int) string {
-	return fmt.Sprintf("s=%d;b=%d;c=%d", status, contentLen, chunks)
-}
-
-// calculateChunks returns the number of chunks required to send contentLen bytes, based on ChunkSize.
-func calculateChunks(contentLen int) int {
-	return int(math.Ceil(float64(contentLen) / ChunkSize))
-}
-
-// calculateEncodedSize returns the content size after applying base64 encoding.
-func calculateEncodedSize(fileSize int64) int {
-	return int(math.Ceil(float64(fileSize) / 3 * 4))
+// BuildHeader constructs a protocol response header string from a ResolvedResource.
+// It computes the base64 encoded size and chunk count internally.
+//
+// The header format is: s={status};b={totalBytes};c={chunks};ct={contentType}
+func BuildHeader(r ResolvedResource) string {
+	contentLen := int(math.Ceil(float64(r.RawSize) / 3 * 4))
+	chunks := int(math.Ceil(float64(contentLen) / ChunkSize))
+	return fmt.Sprintf("s=%d;b=%d;c=%d;ct=%s", r.Status, contentLen, chunks, r.ContentType)
 }
