@@ -11,8 +11,6 @@ To answer this question, there will be an implementation of a PoC of an evasion 
 
 
 ## How it Works
-The PoC is composed of two agents: a `client` and a `server`. The `client` sends requests through Telegram messages, which the `server` receives, processes, and responds to using a custom protocol. 
-
-The exchanged content is encoded to support binary transmission and reassembled on the client side.
+The PoC is composed of two agents: a `client` and a `server`. The `client` sends requests through Telegram messages, which the `server` receives, processes, and responds to using a custom protocol. The exchanged content is encoded to support binary transmission and reassembled on the client side.
 
 > **Disclaimer**: This implementation is being used exclusively for academic purposes, there is no intention of using this type of mechanism outside of an academic context.
