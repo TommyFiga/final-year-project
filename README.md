@@ -3,9 +3,7 @@
 
 
 ## Overview
-Usually in environments like commercial flights, it's very common to sell internet access packages. In most cases, as a courtesy, a free internet pack is offered that allows passengers to access text message applications such as WhatsApp and Telegram. 
-
-However, these applications are usually limited to text messages only. This raises the following question:
+Usually in environments like commercial flights, it's very common to sell internet access packages. In most cases, as a courtesy, a free internet pack is offered that allows passengers to access text message applications such as WhatsApp and Telegram. However, these applications are usually limited to text messages only. This raises the following question:
 
 > _Is it possible to use the actual authorized app messages as a way of surpassing the network limitations?_ 
 
