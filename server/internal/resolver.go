@@ -26,17 +26,18 @@ var storageDir = os.Getenv("STORAGE_DIR")
 // ResolvedResource holds the metadata of a resolved resource, whether local or
 // remote, required to stream its content back to the client.
 type ResolvedResource struct {
+	IsRemote    bool
 	Status      int
 	FilePath    string
 	RawSize     int64
 	ContentType string
-	IsRemote    bool
+	Headers		map[string][]string
 }
 
 func (r ResolvedResource) Cleanup() {
 	if r.IsRemote {
 		os.Remove(r.FilePath)
-  	}
+	}
 }
 
 // Resolve determines whether the requested content is a local or remote resource
@@ -100,12 +101,21 @@ func resolveRemote(url string) (*ResolvedResource, error) {
 		}
 	}
 
+	headers := make(map[string][]string)
+	for k, v := range resp.Header {
+		if k == "Content-Type" || k == "Content-Length" {
+			continue
+		}
+		headers[k] = v
+	}
+
 	return &ResolvedResource{
+		IsRemote:    true,
 		Status:      resp.StatusCode,
 		FilePath:    tempfile.Name(),
 		RawSize:     filesize,
 		ContentType: contentType,
-		IsRemote:    true,
+		Headers: 	 headers,
 	}, nil
 }
 
@@ -144,10 +154,11 @@ func resolveLocal(filename string) (*ResolvedResource, error) {
 	}
 
 	return &ResolvedResource{
+		IsRemote:    false,
 		Status:      StatusOk,
 		FilePath:    fullPath,
 		RawSize:     fileinfo.Size(),
 		ContentType: contentType,
-		IsRemote:    false,
+		Headers: 	 nil,
 	}, nil
 }
