@@ -57,7 +57,6 @@ func Handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chunks, errs := internal.StreamFile(resolvedResource.FilePath)
 	for chunk := range chunks {
 		time.Sleep(time.Second)
-		print(chunk)
 		session.send(chunk)
 	}
 
