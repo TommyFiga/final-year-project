@@ -3,7 +3,7 @@ package bot
 import (
 	"context"
 	"errors"
-	"telegram-proxy-server/internal"
+	"telegram-proxy-server/internal/protocol"
 	"time"
 
 	"github.com/go-telegram/bot"
