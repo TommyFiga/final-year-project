@@ -45,7 +45,7 @@ func StartClient(config *internal.Config) (*TdlibClient, error) {
 	tdlibClient, err := client.NewClient(
 		authorizer,
 		client.WithResultHandler(
-			client.NewCallbackResultHandler(NewMessageListener(config.BotID)),
+			client.NewCallbackResultHandler(NewMessageListener(config.BotID, config.DownloadDir)),
 		),
 	)
 	if err != nil {
