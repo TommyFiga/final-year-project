@@ -36,25 +36,25 @@ func Handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		chatID: update.Message.Chat.ID,
 	}
 
-	reqArgs, err := internal.ParseRequest(update.Message.Text)
+	reqArgs, err := protocol.ParseRequest(update.Message.Text)
 	if err != nil {
-		header := internal.BuildHeader(internal.ResolvedResource{Status: errorToStatus(err)})
+		header := protocol.BuildHeader(protocol.ResolvedResource{Status: errorToStatus(err)})
 		session.send(header)
 		return
 	}
 
-	resolvedResource, err := internal.Resolve(*reqArgs)
+	resolvedResource, err := protocol.Resolve(*reqArgs)
 	if err != nil {
-		header := internal.BuildHeader(internal.ResolvedResource{Status: errorToStatus(err)})
+		header := protocol.BuildHeader(protocol.ResolvedResource{Status: errorToStatus(err)})
 		session.send(header)
 		return
 	}
 	defer resolvedResource.Cleanup()
 
-	header := internal.BuildHeader(*resolvedResource)
+	header := protocol.BuildHeader(*resolvedResource)
 	session.send(header)
 
-	chunks, errs := internal.StreamFile(resolvedResource.FilePath)
+	chunks, errs := protocol.StreamFile(resolvedResource.FilePath)
 	for chunk := range chunks {
 		time.Sleep(time.Second)
 		session.send(chunk)
@@ -69,19 +69,19 @@ func Handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 // status codes. Unrecognized errors default to StatusServerError.
 func errorToStatus(err error) int {
 	switch {
-	case errors.Is(err, internal.ErrInvalidCommand),
-		errors.Is(err, internal.ErrInvalidFilename),
-		errors.Is(err, internal.ErrInvalidRequest):
-		return internal.StatusInvalidRequest
-	case errors.Is(err, internal.ErrFileNotFound):
-		return internal.StatusNotFound
-	case errors.Is(err, internal.ErrStorageNotFound),
-		errors.Is(err, internal.ErrRequestCreation),
-		errors.Is(err, internal.ErrResponseMaking),
-		errors.Is(err, internal.ErrCreatingTempFile),
-		errors.Is(err, internal.ErrWritingToTempFile):
-		return internal.StatusServerError
+	case errors.Is(err, protocol.ErrInvalidCommand),
+		errors.Is(err, protocol.ErrInvalidFilename),
+		errors.Is(err, protocol.ErrInvalidRequest):
+		return protocol.StatusInvalidRequest
+	case errors.Is(err, protocol.ErrFileNotFound):
+		return protocol.StatusNotFound
+	case errors.Is(err, protocol.ErrStorageNotFound),
+		errors.Is(err, protocol.ErrRequestCreation),
+		errors.Is(err, protocol.ErrResponseMaking),
+		errors.Is(err, protocol.ErrCreatingTempFile),
+		errors.Is(err, protocol.ErrWritingToTempFile):
+		return protocol.StatusServerError
 	default:
-		return internal.StatusServerError
+		return protocol.StatusServerError
 	}
 }
