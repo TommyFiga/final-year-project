@@ -11,6 +11,7 @@ type Config struct {
 	BotID         int64
 	TdlibDatabase string
 	TdlibFiles    string
+	DownloadDir   string
 }
 
 func LoadEnv() (*Config, error) {
@@ -20,6 +21,7 @@ func LoadEnv() (*Config, error) {
 		botIDRaw      = os.Getenv("BOT_ID")
 		tdlibDatabase = os.Getenv("TDLIB_DATABASE")
 		tdlibFiles    = os.Getenv("TDLIB_FILES")
+		downloadDir   = os.Getenv("DOWNLOAD_DIR")
 	)
 
 	apiID64, err := strconv.ParseInt(apiIDRaw, 10, 32)
@@ -39,5 +41,6 @@ func LoadEnv() (*Config, error) {
 		BotID:         botID,
 		TdlibDatabase: tdlibDatabase,
 		TdlibFiles:    tdlibFiles,
+		DownloadDir:   downloadDir,
 	}, nil
 }
