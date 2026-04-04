@@ -7,18 +7,18 @@ import (
 )
 
 var (
-	ErrInvalidStatus 	 = errors.New("invalid status value")
-	ErrInvalidChunks 	 = errors.New("invalid chunks value")
+	ErrInvalidStatus     = errors.New("invalid status value")
+	ErrInvalidChunks     = errors.New("invalid chunks value")
 	ErrInvalidTotalBytes = errors.New("invalid totalBytes value")
-	ErrMalformedHeader 	 = errors.New("malformed header format")
+	ErrMalformedHeader   = errors.New("malformed header format")
 )
 
 // Header represents a parsed protocol response header.
 // The header format is: s={status};b={totalBytes};c={chunks};ct={contentType}\r\n{HTTPHeaders}
 type Header struct {
-	Status 		int
-	TotalBytes 	int
-	Chunks 		int
+	Status      int
+	TotalBytes  int
+	Chunks      int
 	ContentType string
 	HttpHeaders map[string]string
 }
@@ -26,7 +26,7 @@ type Header struct {
 // ParseHeader parses a protocol response header string into a Header struct.
 // HTTP headers are only present for remote resources and are optional.
 func ParseHeader(headerMsg string) (*Header, error) {
-	parts := strings.SplitN(headerMsg, "\r\n", 2)
+	parts := strings.SplitN(headerMsg, "\n", 2)
 	protocolLine := parts[0]
 
 	header := &Header{
