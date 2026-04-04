@@ -1,4 +1,4 @@
-package internal
+package protocol
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func BuildHeader(r ResolvedResource) string {
 
 	for key, values := range r.Headers {
 		for _, value := range values {
-			fmt.Fprintf(&sb, "\r\n%s: %s", key, value)
+			fmt.Fprintf(&sb, "\n%s: %s", key, value)
 		}
 	}
 			
