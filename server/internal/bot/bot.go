@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"telegram-proxy-server/internal"
 
 	"github.com/go-telegram/bot"
 )
@@ -10,13 +11,13 @@ type Bot struct {
 	inner *bot.Bot
 }
 
-func New(token string) (*Bot, error) {
+func New(config *internal.Config) (*Bot, error) {
 	opts := []bot.Option{
 		bot.WithMiddlewares(),
 		bot.WithDefaultHandler(Handler),
 	}
 
-	b, err := bot.New(token, opts...)
+	b, err := bot.New(config.ApiToken, opts...)
 	if err != nil {
 		return nil, err
 	}
