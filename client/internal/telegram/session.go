@@ -20,9 +20,10 @@ type Session struct {
 	file           *os.File
 	chunksReceived int
 	downloadDir    string
+	signal         chan struct{}
 }
 
-func (s *Session) handleHeader(headerMsg string) {	
+func (s *Session) handleHeader(headerMsg string) {
 	header, err := protocol.ParseHeader(headerMsg)
 	if err != nil {
 		log.Printf("ParsingHeader() failed: %v", err)
@@ -55,23 +56,31 @@ func (s *Session) handleChunk(chunkMsg string) {
 	err := protocol.DecodeChunk(s.file, chunkMsg)
 	if err != nil {
 		log.Printf("DecodeChunk failed: %v", err)
-		s.file.Close()
 		s.reset()
 		return
 	}
 
 	if s.chunksReceived == s.header.Chunks {
 		log.Printf("File downloaded into %s", s.file.Name())
-		s.file.Close()
 		s.reset()
 		return
 	}
 }
 
 func (s *Session) reset() {
-	*s = Session{ downloadDir: s.downloadDir }
+	if s.file != nil {
+		s.file.Close()
+	}
+
+	s.signal <- struct{}{}
+
+	*s = Session{downloadDir: s.downloadDir, signal: s.signal}
+}
+
+func (s *Session) Wait() {
+	<-s.signal
 }
 
 func NewSession(downloadDir string) *Session {
-	return &Session{ downloadDir: downloadDir }
+	return &Session{downloadDir: downloadDir, signal: make(chan struct{}, 1)}
 }

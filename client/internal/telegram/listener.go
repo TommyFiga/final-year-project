@@ -2,9 +2,7 @@ package telegram
 
 import "github.com/zelenin/go-tdlib/client"
 
-func NewMessageListener(botID int64, downloadDir string) func(client.Type) {
-	session := NewSession(downloadDir)
-
+func NewMessageListener(botID int64, downloadDir string, session *Session) func(client.Type) {
 	return func(result client.Type) {
 		msg, ok := extractMessageText(result, botID)
 		if !ok {

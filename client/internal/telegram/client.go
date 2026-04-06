@@ -2,20 +2,36 @@ package telegram
 
 import (
 	"context"
+	"log"
 	"telegram-proxy-client/internal"
 
 	"github.com/zelenin/go-tdlib/client"
 )
 
 type TdlibClient struct {
-	inner *client.Client
+	inner  *client.Client
+	chatID int64
+}
+
+func (c *TdlibClient) SendMessage(ctx context.Context, request string) {
+	_, err := c.inner.SendMessage(ctx, &client.SendMessageRequest{
+		ChatId: c.chatID,
+		InputMessageContent: &client.InputMessageText{
+			Text: &client.FormattedText{
+				Text: request,
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalf("Unable to send message: %v", err)
+	}
 }
 
 func (c *TdlibClient) Close(ctx context.Context) {
 	c.inner.Close(ctx)
 }
 
-func StartClient(config *internal.Config) (*TdlibClient, error) {
+func StartClient(config *internal.Config, session *Session) (*TdlibClient, error) {
 	tdlibParameters := &client.SetTdlibParametersRequest{
 		UseTestDc:           false,
 		DatabaseDirectory:   config.TdlibDatabase,
@@ -45,12 +61,12 @@ func StartClient(config *internal.Config) (*TdlibClient, error) {
 	tdlibClient, err := client.NewClient(
 		authorizer,
 		client.WithResultHandler(
-			client.NewCallbackResultHandler(NewMessageListener(config.BotID, config.DownloadDir)),
+			client.NewCallbackResultHandler(NewMessageListener(config.BotID, config.DownloadDir, session)),
 		),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TdlibClient{inner: tdlibClient}, nil
+	return &TdlibClient{inner: tdlibClient, chatID: config.BotID}, nil
 }

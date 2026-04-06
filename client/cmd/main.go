@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"telegram-proxy-client/internal"
+	"telegram-proxy-client/internal/input"
 	"telegram-proxy-client/internal/telegram"
 )
 
@@ -19,12 +20,13 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	tdlibClient, err := telegram.StartClient(config)
+	session := telegram.NewSession(config.DownloadDir)
+	tdlibClient, err := telegram.StartClient(config, session)
 	if err != nil {
 		log.Fatalf("StartClient() error: %v", err)
 	}
 	defer tdlibClient.Close(ctx)
 
 	log.Print("Client Started...")
-	<-ctx.Done()
+	input.StartReader(ctx, tdlibClient, session.Wait)
 }
