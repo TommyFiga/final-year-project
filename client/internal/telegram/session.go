@@ -31,6 +31,7 @@ func (s *Session) handleHeader(headerMsg string) {
 		return
 	}
 
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.Printf("Header: %s", headerMsg)
 
 	if header.Status >= 400 && header.Status < 600 {
@@ -61,7 +62,8 @@ func (s *Session) handleChunk(chunkMsg string) {
 	}
 
 	if s.chunksReceived == s.header.Chunks {
-		log.Printf("File downloaded into %s", s.file.Name())
+		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+		log.Printf("File downloaded to %s", s.file.Name())
 		s.reset()
 		return
 	}

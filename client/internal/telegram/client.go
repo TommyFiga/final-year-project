@@ -25,6 +25,9 @@ func (c *TdlibClient) SendMessage(ctx context.Context, request string) {
 	if err != nil {
 		log.Fatalf("Unable to send message: %v", err)
 	}
+
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	log.Print("Message Sent")
 }
 
 func (c *TdlibClient) Close(ctx context.Context) {
