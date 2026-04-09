@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"telegram-proxy-client/internal"
-	"telegram-proxy-client/internal/input"
 	"telegram-proxy-client/internal/telegram"
 )
 
@@ -28,5 +30,22 @@ func main() {
 	defer tdlibClient.Close(ctx)
 
 	log.Print("Client Started...")
-	input.StartReader(ctx, tdlibClient, session.Wait)
+	rdr := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("Send Message: ")
+		line, err := rdr.ReadString('\n')
+		if err != nil {
+            fmt.Fprintln(os.Stderr, "error:", err)
+            return 
+		}
+
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "quit" {
+			return
+		}
+		
+		tdlibClient.SendMessage(ctx, trimmed)
+		session.Wait()
+	}
 }
