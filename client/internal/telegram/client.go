@@ -27,7 +27,7 @@ func (c *TdlibClient) SendMessage(ctx context.Context, request string) {
 	}
 
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-	log.Print("Message Sent")
+	log.Print("REQUEST_SENT")
 }
 
 func (c *TdlibClient) Close(ctx context.Context) {

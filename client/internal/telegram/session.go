@@ -32,7 +32,7 @@ func (s *Session) handleHeader(headerMsg string) {
 	}
 
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-	log.Printf("Header: %s", headerMsg)
+	log.Printf("HEADER_RECEIVED: %s", headerMsg)
 
 	if header.Status >= 400 && header.Status < 600 {
 		s.reset()
@@ -63,7 +63,7 @@ func (s *Session) handleChunk(chunkMsg string) {
 
 	if s.chunksReceived == s.header.Chunks {
 		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-		log.Printf("File downloaded to %s", s.file.Name())
+		log.Printf("TRANSFER_COMPLETE: %s", s.file.Name())
 		s.reset()
 		return
 	}
