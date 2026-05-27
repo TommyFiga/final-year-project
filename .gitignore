@@ -9,3 +9,13 @@ tdlib/
 .env
 
 storage/
+
+logs/
+
+test/
+
+.venv/
+
+__pycache__
+
+output/
