@@ -1,4 +1,4 @@
-from log_analyser.config import OUT_DIR
+from config import OUT_DIR
 import pandas as pd
 
 

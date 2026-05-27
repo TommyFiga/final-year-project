@@ -1,3 +1,4 @@
+from config import BENCHMARK_DIR
 from log_analyser.charts import (
     plot_effective_throughput, 
     plot_latency_distribution, 
@@ -5,7 +6,6 @@ from log_analyser.charts import (
     plot_latency_vs_throughput, 
     plot_throughput
 )
-from log_analyser.config import BENCHMARK_DIR
 from log_analyser.parser import load_logs
 from log_analyser.stats import summarize
 

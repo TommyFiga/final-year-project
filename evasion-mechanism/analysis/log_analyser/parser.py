@@ -1,4 +1,4 @@
-from log_analyser.config import TIMESTAMP_FMT
+from config import TIMESTAMP_FMT
 from datetime import datetime, timedelta
 from pathlib import Path
 import math
