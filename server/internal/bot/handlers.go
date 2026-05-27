@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"errors"
+	"log"
 	"telegram-proxy-server/internal/protocol"
 	"time"
 
@@ -30,6 +31,9 @@ func (s Session) send(text string) {
 // resolves the requested resource, and streams its content back to the client
 // as base64-encoded chunks, preceded by a protocol response header.
 func Handler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	log.Printf("Request received: %s", update.Message.Text)
+
 	session := Session{
 		ctx:    ctx,
 		b:      b,
@@ -56,7 +60,7 @@ func Handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	chunks, errs := protocol.StreamFile(resolvedResource.FilePath)
 	for chunk := range chunks {
-		time.Sleep(time.Second)
+		time.Sleep(1000 * time.Millisecond)
 		session.send(chunk)
 	}
 
