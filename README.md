@@ -1,16 +1,25 @@
 # Final-Year Project
-> PoC implementation for a _proxy_ using Telegram as the communication channel.
+> PoC and evaluation of restriction evasion over messaging services.
 
 
 ## Overview
-Usually in environments like commercial flights, it's very common to sell internet access packages. In most cases, as a courtesy, a free internet pack is offered that allows passengers to access text message applications such as WhatsApp and Telegram. However, these applications are usually limited to text messages only. This raises the following question:
+In environments such as commercial flights, it is very common for internet access packages to be sold. In most cases, as a courtesy, a free internet package is offered that allows passengers to access messaging applications such as WhatsApp and Telegram. However, these applications are usually limited to text messages only. This raises the following question:
 
-> _Is it possible to use the actual authorized app messages as a way of surpassing the network limitations?_ 
+> _Is it possible to use authorized messaging applications as a way to bypass network limitations?_
 
-To answer this question, there will be an implementation of a PoC of an evasion mechanism using Telegram messages as a communication channel.
+To answer this question, a PoC of an **evasion mechanism** using Telegram messages as a communication channel will be implemented. And a **detection mechanism** based on Machine Learning techniques will also be developed, capable of analysing raw Wireshark traffic and categorizing it as either evasion traffic or normal traffic.
+
+> **Disclaimer:** This implementation is intended exclusively for academic purposes. There is no intention to use this type of evasion mechanism outside an academic research context.
 
 
-## How it Works
-The PoC is composed of two agents: a `client` and a `server`. The `client` sends requests through Telegram messages, which the `server` receives, processes, and responds to using a custom protocol. The exchanged content is encoded to support binary transmission and reassembled on the client side.
+## Objectives
+Main objectives:
+- Implement the evasion mechanism
+- Evaluate the viability of the evasion mechanism
+- Evaluate the efficiency and security of these types of network restrictions
+- Implement the detection mechanism
+- Evaluate the effectiveness of the detection mechanism using multiple classifiers (e.g., kNN, SVM, Random Forest)
 
-> **Disclaimer**: This implementation is being used exclusively for academic purposes, there is no intention of using this type of mechanism outside of an academic context.
+Optional objectives:
+- Support SOCKS5 integration for the evasion mechanism client
+- Support additional methods (e.g., POST, PUT, and DELETE) for the evasion mechanism protocol
