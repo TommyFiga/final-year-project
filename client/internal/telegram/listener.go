@@ -1,39 +1,48 @@
 package telegram
 
-import "github.com/zelenin/go-tdlib/client"
+import (
+	"context"
+	
+	"github.com/zelenin/go-tdlib/client"
+)
 
-func NewMessageListener(botID int64, downloadDir string, session *Session) func(client.Type) {
+func NewMessageListener(c *TdlibClient, downloadDir string, session *Session) func(client.Type) {
 	return func(result client.Type) {
-		msg, ok := extractMessageText(result, botID)
+		msg, ok := extractMessageText(result, c.chatID)
 		if !ok {
 			return
 		}
 
+		msgText := msg.Content.(*client.MessageText).Text.Text
+
 		switch session.state {
 		case StateAwaitingHeader:
-			session.handleHeader(msg)
+			session.handleHeader(msgText)
 		case StateCollectingChunks:
-			session.handleChunk(msg)
+			session.handleChunk(msgText)
 		}
+		
+		msgID := msg.Id
+		go c.DeleteMessage(context.Background(), msgID)
 	}
 }
 
-func extractMessageText(result client.Type, botID int64) (string, bool) {
+func extractMessageText(result client.Type, botID int64) (*client.Message, bool) {
 	if result.GetConstructor() != client.ConstructorUpdateNewMessage {
-		return "", false
+		return nil, false
 	}
 
 	msg := result.(*client.UpdateNewMessage).Message
 
 	sender, ok := msg.SenderId.(*client.MessageSenderUser)
 	if !ok || sender.UserId != botID {
-		return "", false
+		return nil, false
 	}
 
-	content, ok := msg.Content.(*client.MessageText)
+	_, ok = msg.Content.(*client.MessageText)
 	if !ok {
-		return "", false
+		return nil, false
 	}
-
-	return content.Text.Text, true
+	
+	return msg, true
 }

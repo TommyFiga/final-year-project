@@ -30,6 +30,17 @@ func (c *TdlibClient) SendMessage(ctx context.Context, request string) {
 	log.Print("REQUEST_SENT")
 }
 
+func (c *TdlibClient) DeleteMessage(ctx context.Context, msgID int64) {
+	_, err := c.inner.DeleteMessages(ctx, &client.DeleteMessagesRequest{
+		ChatId: c.chatID,
+		MessageIds: []int64{msgID},
+		Revoke: false,
+	})
+	if err != nil {
+		log.Printf("WARNING: Unable to delete message: %d", msgID)
+	}
+}
+
 func (c *TdlibClient) Close(ctx context.Context) {
 	c.inner.Close(ctx)
 }
@@ -61,15 +72,21 @@ func StartClient(config *internal.Config, session *Session) (*TdlibClient, error
 		return nil, err
 	}
 
+	tdlibWrapper := &TdlibClient{chatID: config.BotID}
+
 	tdlibClient, err := client.NewClient(
 		authorizer,
 		client.WithResultHandler(
-			client.NewCallbackResultHandler(NewMessageListener(config.BotID, config.DownloadDir, session)),
+			client.NewCallbackResultHandler(
+				NewMessageListener(tdlibWrapper, config.DownloadDir, session),
+			),
 		),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TdlibClient{inner: tdlibClient, chatID: config.BotID}, nil
+	tdlibWrapper.inner = tdlibClient
+
+	return tdlibWrapper, nil
 }
