@@ -19,3 +19,5 @@ test/
 __pycache__
 
 output/
+
+data/
